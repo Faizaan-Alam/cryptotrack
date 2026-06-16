@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* Custom theme tokens for the crypto tracker */
+@theme {
+  --color-crypto-dark: #0f172a;
+  --color-crypto-card: #1e293b;
+  --color-crypto-border: #334155;
+  --color-crypto-accent: #3b82f6;
+  --color-crypto-gain: #22c55e;
+  --color-crypto-loss: #ef4444;
+}
+
+/* Base styles */
+body {
+  @apply bg-crypto-dark text-slate-100 antialiased;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
