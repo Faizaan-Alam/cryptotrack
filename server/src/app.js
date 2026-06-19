@@ -17,6 +17,19 @@ app.use(
 app.use(express.json());
 app.use(passport.initialize());
 
+app.get('/api/health', async (_req, res) => {
+  try {
+    await connectDB();
+    res.json({ status: 'ok', database: 'connected' });
+  } catch {
+    res.status(503).json({
+      status: 'error',
+      database: 'disconnected',
+      error: 'Database unavailable. Check MONGODB_URI in Vercel and Atlas Network Access.',
+    });
+  }
+});
+
 app.use(async (req, res, next) => {
   try {
     await connectDB();
@@ -25,10 +38,6 @@ app.use(async (req, res, next) => {
     console.error('Database connection error:', error.message);
     res.status(503).json({ error: 'Database unavailable. Check MongoDB Atlas settings.' });
   }
-});
-
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' });
 });
 
 app.use('/api/auth', authRoutes);
