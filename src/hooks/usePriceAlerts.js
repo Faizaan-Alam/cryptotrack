@@ -5,20 +5,19 @@ import { useLocalStorage } from './useLocalStorage';
 import { STORAGE_KEYS } from '../utils/constants';
 
 /**
- * Manage price alerts stored in localStorage
- * Checks prices periodically and fires browser notifications
+ * Manage price alerts — uses external state when provided, otherwise localStorage
  */
-export function usePriceAlerts(coins = []) {
-  const [alerts, setAlerts] = useLocalStorage(STORAGE_KEYS.ALERTS, []);
+export function usePriceAlerts(coins = [], externalAlerts, externalSetAlerts) {
+  const [localAlerts, setLocalAlerts] = useLocalStorage(STORAGE_KEYS.ALERTS, []);
+  const alerts = externalAlerts ?? localAlerts;
+  const setAlerts = externalSetAlerts ?? setLocalAlerts;
 
-  // Request notification permission on first use
   const requestPermission = useCallback(async () => {
     if ('Notification' in window && Notification.permission === 'default') {
       await Notification.requestPermission();
     }
   }, []);
 
-  // Add a new price alert
   const addAlert = useCallback(
     (coinId, coinName, targetPrice, condition = 'above') => {
       const newAlert = {
@@ -26,7 +25,7 @@ export function usePriceAlerts(coins = []) {
         coinId,
         coinName,
         targetPrice: parseFloat(targetPrice),
-        condition, // 'above' or 'below'
+        condition,
         triggered: false,
         createdAt: Date.now(),
       };
@@ -36,7 +35,6 @@ export function usePriceAlerts(coins = []) {
     [setAlerts, requestPermission]
   );
 
-  // Remove an alert by ID
   const removeAlert = useCallback(
     (alertId) => {
       setAlerts((prev) => prev.filter((a) => a.id !== alertId));
@@ -44,7 +42,6 @@ export function usePriceAlerts(coins = []) {
     [setAlerts]
   );
 
-  // Check alerts against current prices
   useEffect(() => {
     if (!coins.length || !alerts.length) return;
 
@@ -62,7 +59,6 @@ export function usePriceAlerts(coins = []) {
         (alert.condition === 'below' && currentPrice <= alert.targetPrice);
 
       if (shouldTrigger) {
-        // Fire browser notification
         if ('Notification' in window && Notification.permission === 'granted') {
           new Notification(`Price Alert: ${alert.coinName}`, {
             body: `${alert.coinName} is now $${currentPrice.toLocaleString()} (${alert.condition} $${alert.targetPrice})`,
@@ -70,11 +66,8 @@ export function usePriceAlerts(coins = []) {
           });
         }
 
-        // Mark as triggered
         setAlerts((prev) =>
-          prev.map((a) =>
-            a.id === alert.id ? { ...a, triggered: true } : a
-          )
+          prev.map((a) => (a.id === alert.id ? { ...a, triggered: true } : a))
         );
       }
     });
